@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class TagParser {
 
@@ -19,24 +21,20 @@ public class TagParser {
 
         fileReader.close();
         String tag = args[0];
-        String text = sb.toString();
         Map<Integer, Integer> openers = new TreeMap<>();
-        int index = 0;
+        Matcher matcher = Pattern.compile("(<\\s*/?\\s*" + tag + ".*?>)").matcher(sb);
 
-        while ((index = text.indexOf(tag, index + 1)) > -1) {
-            char openOrClose = text.charAt(index - 1);
-            if (openOrClose == '/') {
-                int opener = lastNull(openers);
-                openers.put(opener, index + tag.length() + 1);
+        while (matcher.find()) {
+            if (matcher.group().matches("<\\s*" + tag + ".*?>")) {
+                openers.put(matcher.start(), null);
             } else {
-                openers.put(index - 1, null);
+                openers.put(lastNull(openers), matcher.end());
             }
         }
 
         openers.forEach((key, value) -> {
-            System.out.println(text.substring(key, value));
+            System.out.println(sb.substring(key, value));
         });
-
     }
 
     static int lastNull(Map<Integer, Integer> map) {
